@@ -1,3 +1,4 @@
+```cpp
 #include <DHT.h>
 
 #define MQ2_PIN 34
@@ -7,6 +8,10 @@
 #define DHT_TYPE DHT11
 
 DHT dht(DHT_PIN, DHT_TYPE);
+
+int smokeLimit = 1800;
+int flameLimit = 1000;
+float tempLimit = 50.0;
 
 void setup() {
   Serial.begin(115200);
@@ -18,6 +23,9 @@ void setup() {
   digitalWrite(LED_PIN, LOW);
 
   dht.begin();
+
+  Serial.println("Automatic Fire Detection Prototype");
+  Serial.println("Suppression activation: SIMULATION ONLY");
 }
 
 void loop() {
@@ -27,10 +35,21 @@ void loop() {
   float temperature = dht.readTemperature();
   float humidity = dht.readHumidity();
 
-  Serial.print("Smoke: ");
+  bool smokeDetected = smokeValue > smokeLimit;
+  bool flameDetected = flameValue < flameLimit;
+  bool highTemperature = !isnan(temperature) &&
+                         temperature >= tempLimit;
+
+  bool fireDetected = smokeDetected ||
+                      flameDetected ||
+                      highTemperature;
+
+  Serial.println("\n-------------------------");
+
+  Serial.print("Smoke value: ");
   Serial.println(smokeValue);
 
-  Serial.print("Flame: ");
+  Serial.print("Flame value: ");
   Serial.println(flameValue);
 
   if (isnan(temperature) || isnan(humidity)) {
@@ -45,7 +64,18 @@ void loop() {
     Serial.println(" %");
   }
 
-  Serial.println("--------------------");
+  if (fireDetected) {
+    digitalWrite(LED_PIN, HIGH);
+
+    Serial.println("WARNING: POSSIBLE FIRE DETECTED");
+    Serial.println("SUPPRESSION REQUEST - SIMULATION ONLY");
+    Serial.println("REAL EXTINGUISHER NOT CONNECTED");
+  } else {
+    digitalWrite(LED_PIN, LOW);
+
+    Serial.println("No warning condition detected");
+  }
 
   delay(1000);
 }
+```
